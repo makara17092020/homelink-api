@@ -1,4 +1,4 @@
-package com.homelink.api.domain;
+package com.homelink.api.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -17,6 +17,9 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = true) 
+    private String fullName;
 
     @Column(unique = true, nullable = false)
     private String username;

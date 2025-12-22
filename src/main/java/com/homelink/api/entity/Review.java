@@ -1,4 +1,4 @@
-package com.homelink.api.domain;
+package com.homelink.api.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

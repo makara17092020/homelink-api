@@ -1,7 +1,7 @@
 package com.homelink.api;
 
-import com.homelink.api.domain.Role;
-import com.homelink.api.domain.User;
+import com.homelink.api.entity.Role;
+import com.homelink.api.entity.User;
 import com.homelink.api.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

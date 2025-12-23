@@ -22,8 +22,8 @@ public class Review {
     private RentalPost post;
 
     @ManyToOne
-    @JoinColumn(name = "renter_id", nullable = false)
-    private User renter;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 }

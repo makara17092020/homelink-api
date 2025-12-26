@@ -2,7 +2,6 @@ package com.homelink.api.service;
 
 import com.homelink.api.dto.AuthResponse;
 import com.homelink.api.dto.RegisterRequest;
-import com.homelink.api.entity.Role;
 import com.homelink.api.entity.User;
 import com.homelink.api.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,8 +32,8 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         
-        // As per your requirement: default role is RENTER
-        user.setRole(Role.RENTER); 
+        // Assign default role USER to all new registrations
+        user.setRoles(java.util.List.of("USER"));
         
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);
@@ -69,7 +68,7 @@ public class AuthService {
                 .fullName(user.getFullName()) // Include in response
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole().toString())
+                .roles(user.getRoles().toArray(new String[0]))
                 .build();
     }
 }

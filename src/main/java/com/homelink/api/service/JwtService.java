@@ -3,7 +3,9 @@ package com.homelink.api.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -38,7 +40,9 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", userDetails.getAuthorities().iterator().next().getAuthority());
+        claims.put("roles", userDetails.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .collect(Collectors.toList()));
         return createToken(claims, userDetails.getUsername());
     }
 

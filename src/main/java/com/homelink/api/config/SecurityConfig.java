@@ -32,11 +32,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // Public auth endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/agent/**").hasRole("AGENT")
-                        .requestMatchers("/api/renter/**").hasRole("RENTER")
-                        .anyRequest().authenticated()
+                    .requestMatchers("/api/auth/**").permitAll()  // Public auth endpoints
+                    // User CRUD endpoints - require authentication but no admin/agent roles
+                    .requestMatchers("/api/users/**").authenticated()
+                    .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class);

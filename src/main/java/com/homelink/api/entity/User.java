@@ -7,8 +7,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -18,7 +20,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = true) 
+    @Column(nullable = true)
     private String fullName;
 
     @Column(unique = true, nullable = false)
@@ -30,15 +32,31 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    // Legacy single-column role kept for compatibility with existing DB schema
+    @Column(name = "role", nullable = false)
+    private String role;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
+    private List<String> roles = new ArrayList<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    }
+
+    // Keep legacy `role` column in sync with `roles` collection: first entry.
+    public void setRoles(List<String> roles) {
+        this.roles = roles != null ? roles : new ArrayList<>();
+        if (this.roles.isEmpty()) {
+            this.role = null;
+        } else {
+            // Use the first role directly for legacy `role` column
+            this.role = this.roles.get(0);
+        }
     }
 
     @Override

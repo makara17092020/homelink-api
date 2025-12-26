@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "HomeLink API (Clean User CRUD)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Simple collection matching the project: register, login, and user CRUD.\nSet environment variable `base_url` to http://localhost:8081 and Postman will save `token` after auth."
+  },
+  "item": [
+    {
+      "name": "Auth / Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Test User\",\n  \"username\": \"testuser\",\n  \"password\": \"TestPass123\",\n  \"email\": \"testuser@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/register",
+          "host": [ "{{base_url}}" ],
+          "path": [ "api", "auth", "register" ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  if (pm.response.code === 200 || pm.response.code === 201) {",
+              "    var json = pm.response.json();",
+              "    if (json.token) pm.environment.set(\"token\", json.token);",
+              "  }",
+              "} catch (e) { console.log('register parse error', e); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth / Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"TestPass123\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "login" ] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  if (pm.response.code === 200) {",
+              "    var json = pm.response.json();",
+              "    if (json.token) pm.environment.set(\"token\", json.token);",
+              "  }",
+              "} catch (e) { console.log('login parse error', e); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users / Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"New User\",\n  \"username\": \"newuser\",\n  \"password\": \"StrongPass123\",\n  \"email\": \"newuser@example.com\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/users", "host": [ "{{base_url}}" ], "path": [ "api", "users" ] }
+      }
+    },
+    {
+      "name": "Users / List",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "url": { "raw": "{{base_url}}/api/users?page=0&size=10", "host": [ "{{base_url}}" ], "path": [ "api", "users" ], "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ] }
+      }
+    },
+    {
+      "name": "Users / Get by ID",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
+      }
+    },
+    {
+      "name": "Users / Update",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}" },
+        "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
+      }
+    },
+    {
+      "name": "Users / Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
+      }
+    }
+  ]
+}

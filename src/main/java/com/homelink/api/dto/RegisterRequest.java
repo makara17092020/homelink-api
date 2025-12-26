@@ -8,5 +8,4 @@ public class RegisterRequest {
     private String username;
     private String password;
     private String email;
-    // roles removed from client input. Server will assign default role USER.
 }

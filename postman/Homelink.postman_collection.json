@@ -1,19 +1,16 @@
 {
   "info": {
-    "name": "HomeLink API",
+    "name": "HomeLink API (Clean User CRUD)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Collection for HomeLink API - register and login endpoints."
+    "description": "Simple collection matching the project: register, login, and user CRUD.\nSet environment variable `base_url` to http://localhost:8081 and Postman will save `token` after auth."
   },
   "item": [
     {
-      "name": "Register",
+      "name": "Auth / Register",
       "request": {
         "method": "POST",
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
+          { "key": "Content-Type", "value": "application/json" }
         ],
         "body": {
           "mode": "raw",
@@ -21,14 +18,8 @@
         },
         "url": {
           "raw": "{{base_url}}/api/auth/register",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "auth",
-            "register"
-          ]
+          "host": [ "{{base_url}}" ],
+          "path": [ "api", "auth", "register" ]
         }
       },
       "event": [
@@ -37,200 +28,89 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "// Store returned token into environment variable 'token' after register",
-              "if (pm.response.code === 200) {",
-              "    try {",
-              "        var json = pm.response.json();",
-              "        if (json.token) {",
-              "            pm.environment.set(\"token\", json.token);",
-              "            console.log(\"Token saved to environment variable 'token'.\");",
-              "        } else {",
-              "            console.warn(\"No token field in response JSON.\");",
-              "        }",
-              "    } catch (e) {",
-              "        console.error(\"Failed to parse JSON response:\", e);",
-              "    }",
-              "} else {",
-              "    console.warn(\"Register request returned status code:\", pm.response.code);",
-              "}"
+              "try {",
+              "  if (pm.response.code === 200 || pm.response.code === 201) {",
+              "    var json = pm.response.json();",
+              "    if (json.token) pm.environment.set(\"token\", json.token);",
+              "  }",
+              "} catch (e) { console.log('register parse error', e); }"
             ]
           }
         }
-      ],
-      "response": []
+      ]
     },
     {
-      "name": "Register (invalid) - missing email",
+      "name": "Auth / Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"TestPass123\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "login" ] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "try {",
+              "  if (pm.response.code === 200) {",
+              "    var json = pm.response.json();",
+              "    if (json.token) pm.environment.set(\"token\", json.token);",
+              "  }",
+              "} catch (e) { console.log('login parse error', e); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users / Create",
       "request": {
         "method": "POST",
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"fullName\": \"Bad User\",\n  \"username\": \"baduser\",\n  \"password\": \"short\"\n}"
+          "raw": "{\n  \"fullName\": \"New User\",\n  \"username\": \"newuser\",\n  \"password\": \"StrongPass123\",\n  \"email\": \"newuser@example.com\"\n}"
         },
-        "url": {
-          "raw": "{{base_url}}/api/auth/register",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "auth",
-            "register"
-          ]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "// Expect 400 Bad Request when required fields are missing",
-              "pm.test('Status code is 400', function () {",
-              "    pm.response.to.have.status(400);",
-              "});",
-              "// Optionally print response body for debugging",
-              "console.log(pm.response.text());"
-            ]
-          }
-        }
-      ],
-      "response": []
+        "url": { "raw": "{{base_url}}/api/users", "host": [ "{{base_url}}" ], "path": [ "api", "users" ] }
+      }
     },
     {
-      "name": "Login",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"TestPass123\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/auth/login",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "auth",
-            "login"
-          ]
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "// Store returned token into environment variable 'token'",
-              "if (pm.response.code === 200) {",
-              "    try {",
-              "        var json = pm.response.json();",
-              "        if (json.token) {",
-              "            pm.environment.set(\"token\", json.token);",
-              "            console.log(\"Token saved to environment variable 'token'.\");",
-              "        } else {",
-              "            console.warn(\"No token field in response JSON.\");",
-              "        }",
-              "    } catch (e) {",
-              "        console.error(\"Failed to parse JSON response:\", e);",
-              "    }",
-              "} else {",
-              "    console.warn(\"Login request returned status code:\", pm.response.code);",
-              "}"
-            ]
-          }
-        }
-      ],
-      "response": []
-    },
-    {
-      "name": "Get User Profile (example)",
+      "name": "Users / List",
       "request": {
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}",
-            "type": "text"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}/api/user/profile",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "user",
-            "profile"
-          ]
-        }
-      },
-      "response": []
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "url": { "raw": "{{base_url}}/api/users?page=0&size=10", "host": [ "{{base_url}}" ], "path": [ "api", "users" ], "query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ] }
+      }
     },
     {
-      "name": "Agent Protected Endpoint (example)",
+      "name": "Users / Get by ID",
       "request": {
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}",
-            "type": "text"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}/api/agent/secure",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "agent",
-            "secure"
-          ]
-        }
-      },
-      "response": []
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
+      }
     },
     {
-      "name": "Admin Protected Endpoint (example)",
+      "name": "Users / Update",
       "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}",
-            "type": "text"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}/api/admin/secure",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "admin",
-            "secure"
-          ]
-        }
-      },
-      "response": []
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}" },
+        "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
+      }
+    },
+    {
+      "name": "Users / Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+        "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
+      }
     }
   ]
 }

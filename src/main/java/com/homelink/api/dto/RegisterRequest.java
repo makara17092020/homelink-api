@@ -8,5 +8,5 @@ public class RegisterRequest {
     private String username;
     private String password;
     private String email;
-    private String[] roles; // e.g. ["USER"] or ["AGENT"] (ADMIN seeded)
+    // roles removed from client input. Server will assign default role USER.
 }

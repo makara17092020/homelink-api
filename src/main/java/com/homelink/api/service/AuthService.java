@@ -32,12 +32,8 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         
-        // If client provided roles use them; otherwise default to USER
-        if (request.getRoles() != null && request.getRoles().length > 0) {
-            user.setRoles(java.util.Arrays.asList(request.getRoles()));
-        } else {
-            user.setRoles(java.util.List.of("USER"));
-        }
+        // Assign default role USER to all new registrations
+        user.setRoles(java.util.List.of("USER"));
         
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);

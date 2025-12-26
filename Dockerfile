@@ -10,6 +10,9 @@ COPY .mvn .mvn
 # Copy the source code
 COPY src ./src
 
+# Quick visible build marker so remote build logs show this Dockerfile was used
+RUN echo "RENDER_BUILD_MARKER: multi-stage-dockerfile-2025-12-26"
+
 # Build the project (skip tests to speed up builds; change if you want tests run in CI)
 RUN mvn -DskipTests package -B
 

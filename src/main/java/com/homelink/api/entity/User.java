@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
 @Entity
 @Table(name = "users")
@@ -30,63 +30,41 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    // Legacy single-column role kept for compatibility with existing DB schema
+    // Legacy single-column role (now the primary way to store role)
     @Column(name = "role", nullable = false)
     private String role;
-
-    // New many-to-many mapping to the `roles` table. We keep migrations that
-    // migrate data from the old `user_roles` element-collection table into
-    // the new join table `user_role_map`.
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_role_map",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private java.util.Set<Role> roles = new java.util.HashSet<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles.stream()
-                .map(r -> new SimpleGrantedAuthority(r.getName()))
-                .collect(Collectors.toList());
+        // Use the single 'role' for authorities
+        if (this.role != null && !this.role.isEmpty()) {
+            return Collections.singletonList(new SimpleGrantedAuthority(this.role));
+        }
+        return Collections.emptyList();
     }
 
-    // Backwards-compatible setter: accept list of role names (legacy code paths)
+    // Optional: If legacy code expects setRoles(List<String>), adapt it to set the single role
     public void setRoles(java.util.List<String> roleNames) {
-        if (roleNames == null) {
-            this.roles = new java.util.HashSet<>();
+        if (roleNames != null && !roleNames.isEmpty()) {
+            this.role = roleNames.get(0); // Take the first role (or handle multiple as comma-separated if needed)
         } else {
-            // Create transient Role objects by name. After save, JPA should
-            // be able to resolve actual Role entities when merged with proper
-            // Role repository usage in service layer.
-            this.roles = roleNames.stream().map(Role::new).collect(java.util.stream.Collectors.toSet());
-        }
-        if (this.roles.isEmpty()) {
             this.role = null;
-        } else {
-            this.role = this.roles.iterator().next().getName();
         }
     }
 
-    // Preferred setter for new code paths
-    public void setRoles(java.util.Set<Role> roles) {
-        this.roles = roles != null ? roles : new java.util.HashSet<>();
-        if (this.roles.isEmpty()) {
-            this.role = null;
-        } else {
-            this.role = this.roles.iterator().next().getName();
-        }
-    }
+    public java.util.List<String> getRoles() {
+    return this.role != null ? java.util.List.of(this.role) : java.util.Collections.emptyList();
+}
 
     @Override
     public boolean isAccountNonExpired() { return true; }
-    @Override
     public boolean isAccountNonLocked() { return true; }
+
     @Override
     public boolean isCredentialsNonExpired() { return true; }
+
     @Override
     public boolean isEnabled() { return true; }
 }

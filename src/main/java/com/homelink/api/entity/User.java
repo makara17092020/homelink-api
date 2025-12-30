@@ -7,9 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity
@@ -36,26 +34,50 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false)
     private String role;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role")
-    private List<String> roles = new ArrayList<>();
+    // New many-to-many mapping to the `roles` table. We keep migrations that
+    // migrate data from the old `user_roles` element-collection table into
+    // the new join table `user_role_map`.
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_role_map",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private java.util.Set<Role> roles = new java.util.HashSet<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return this.roles.stream()
+                .map(r -> new SimpleGrantedAuthority(r.getName()))
+                .collect(Collectors.toList());
     }
 
-    // Keep legacy `role` column in sync with `roles` collection: first entry.
-    public void setRoles(List<String> roles) {
-        this.roles = roles != null ? roles : new ArrayList<>();
+    // Backwards-compatible setter: accept list of role names (legacy code paths)
+    public void setRoles(java.util.List<String> roleNames) {
+        if (roleNames == null) {
+            this.roles = new java.util.HashSet<>();
+        } else {
+            // Create transient Role objects by name. After save, JPA should
+            // be able to resolve actual Role entities when merged with proper
+            // Role repository usage in service layer.
+            this.roles = roleNames.stream().map(Role::new).collect(java.util.stream.Collectors.toSet());
+        }
         if (this.roles.isEmpty()) {
             this.role = null;
         } else {
-            // Use the first role directly for legacy `role` column
-            this.role = this.roles.get(0);
+            this.role = this.roles.iterator().next().getName();
+        }
+    }
+
+    // Preferred setter for new code paths
+    public void setRoles(java.util.Set<Role> roles) {
+        this.roles = roles != null ? roles : new java.util.HashSet<>();
+        if (this.roles.isEmpty()) {
+            this.role = null;
+        } else {
+            this.role = this.roles.iterator().next().getName();
         }
     }
 

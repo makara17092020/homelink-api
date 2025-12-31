@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,49 +22,52 @@ public class RentalPostServiceImpl implements RentalPostService {
     private final RentalPostRepository rentalPostRepository;
     private final UserRepository userRepository;
 
-    @Override
-    @Transactional
-    public RentalPostResponse createPost(CreateRentalPostRequest request, String username) {
-        User agent = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+@Override
+@Transactional
+public RentalPostResponse createPost(CreateRentalPostRequest request, String username) {
+    // 1. Find User
+    User agent = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Build the entity
-        RentalPost post = RentalPost.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .address(request.getAddress())
-                .price(request.getPrice())
-                .electricityCost(request.getElectricityCost()) // Must match Entity field
-                .waterCost(request.getWaterCost())           // Must match Entity field
-                .agent(agent)
-                .images(new ArrayList<>())
-                .build();
+    // 2. Build Entity (Manual list init to be safe)
+    RentalPost post = RentalPost.builder()
+            .title(request.getTitle())
+            .description(request.getDescription())
+            .address(request.getAddress())
+            .price(request.getPrice())
+            .electricityCost(request.getElectricityCost())
+            .waterCost(request.getWaterCost())
+            .agent(agent)
+            .images(new ArrayList<>()) // Prevent NullPointer
+            .build();
 
-        // Add Images
-        if (request.getImageUrls() != null) {
-            for (int i = 0; i < request.getImageUrls().size(); i++) {
-                PropertyImage image = PropertyImage.builder()
-                        .url(request.getImageUrls().get(i))
-                        .sortOrder(i)
-                        .property(post)
-                        .build();
-                post.getImages().add(image);
-            }
+    // 3. Map Images
+    if (request.getImageUrls() != null) {
+        for (int i = 0; i < request.getImageUrls().size(); i++) {
+            PropertyImage img = PropertyImage.builder()
+                    .url(request.getImageUrls().get(i))
+                    .sortOrder(i)
+                    .property(post) // Ensure FK is set
+                    .build();
+            post.getImages().add(img);
         }
-
-        RentalPost savedPost = rentalPostRepository.save(post);
-
-        return RentalPostResponse.builder()
-                .id(savedPost.getId())
-                .title(savedPost.getTitle())
-                .description(savedPost.getDescription())
-                .address(savedPost.getAddress())
-                .price(savedPost.getPrice())
-                .electricityCost(savedPost.getElectricityCost())
-                .waterCost(savedPost.getWaterCost())
-                .agentName(agent.getFullName() != null ? agent.getFullName() : agent.getUsername())
-                .imageUrls(savedPost.getImages().stream().map(PropertyImage::getUrl).collect(Collectors.toList()))
-                .createdAt(savedPost.getCreatedAt())
-                .build();
     }
+
+    // 4. Save
+    RentalPost savedPost = rentalPostRepository.save(post);
+
+    // 5. Build Response (with null-safe agent name)
+    return RentalPostResponse.builder()
+            .id(savedPost.getId())
+            .title(savedPost.getTitle())
+            .description(savedPost.getDescription())
+            .address(savedPost.getAddress())
+            .price(savedPost.getPrice())
+            .electricityCost(savedPost.getElectricityCost())
+            .waterCost(savedPost.getWaterCost())
+            .agentName(agent.getFullName() != null ? agent.getFullName() : agent.getUsername())
+            .imageUrls(savedPost.getImages().stream().map(PropertyImage::getUrl).toList())
+            .createdAt(savedPost.getCreatedAt())
+            .build();
+}
 }

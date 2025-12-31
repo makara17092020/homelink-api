@@ -3,8 +3,11 @@ package com.homelink.api.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Getter 
@@ -34,8 +37,9 @@ public class RentalPost {
     @Builder.Default
     private List<PropertyImage> images = new ArrayList<>();
 
-    @Column(name = "created_at")
-    private java.time.LocalDateTime createdAt;
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
     
     @PrePersist
     protected void onCreate() {

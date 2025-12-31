@@ -1,33 +1,26 @@
 package com.homelink.api.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-/**
- * Role entity. Kept static string constants for backward compatibility with
- * older code that referenced `Role.ADMIN` etc.
- */
 @Entity
 @Table(name = "roles")
-@Data
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Role {
-    // Backwards-compatible constants (some code references these directly)
-    public static final String ADMIN = "ADMIN";
-    public static final String AGENT = "AGENT";
-    public static final String USER = "USER";
+    public static final String ADMIN = "ROLE_ADMIN";
+    public static final String AGENT = "ROLE_AGENT";
+    public static final String USER = "ROLE_USER";
+    
+    // For legacy support if your code uses Role.ROLE_AGENT
+    public static final String ROLE_AGENT = "ROLE_AGENT";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String name;
 
     public Role(String name) {

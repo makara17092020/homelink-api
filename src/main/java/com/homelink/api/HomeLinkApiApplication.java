@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.util.List;
 
 @SpringBootApplication
 public class HomeLinkApiApplication {
@@ -19,18 +20,17 @@ public class HomeLinkApiApplication {
     @Bean
     CommandLineRunner init(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            // Ensure canonical roles exist in the roles table (for validation or listing if needed)
-            for (String rn : java.util.List.of(Role.ADMIN, Role.AGENT, Role.USER)) {
+            for (String rn : List.of(Role.ADMIN, Role.AGENT, Role.USER)) {
                 roleRepository.findByName(rn).orElseGet(() -> roleRepository.save(new Role(rn)));
             }
 
             if (userRepository.findByUsername("admin").isEmpty()) {
                 User admin = new User();
                 admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("adminpass123")); // Change this!
+                admin.setPassword(passwordEncoder.encode("adminpass123"));
                 admin.setEmail("admin@homelink.com");
-                // Set the single role string (no join table needed)
                 admin.setRole(Role.ADMIN);
+                admin.setRoles(List.of(Role.ADMIN));
                 userRepository.save(admin);
             }
         };

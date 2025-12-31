@@ -2,8 +2,14 @@ package com.homelink.api.repository;
 
 import com.homelink.api.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
+
     Optional<Role> findByName(String name);
+
+    // ✅ ADD THIS
+    List<Role> findByNameIn(List<String> names);
 }

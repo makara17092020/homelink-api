@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: homelink-api
+    env: docker
+    branch: develop
+    plan: starter
+    disk: 10
+    buildCommand: ./mvnw -DskipTests package
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromSecret: SPRING_DATASOURCE_URL
+      - key: SPRING_DATASOURCE_USERNAME
+        fromSecret: SPRING_DATASOURCE_USERNAME
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromSecret: SPRING_DATASOURCE_PASSWORD
+      - key: JWT_SECRET
+        fromSecret: JWT_SECRET
+    # Health check (assumes Spring Actuator is enabled and /actuator/health is exposed)
+    healthCheckPath: /actuator/health
+    healthCheckIntervalSeconds: 15
+    # Render will set PORT at runtime. Spring should use server.port=${PORT:8080} in application.properties
+    # If you prefer, you can explicitly map SERVER_PORT to a secret/value here. We leave it to runtime.

@@ -34,6 +34,23 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
             jdbc.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('ADMIN','AGENT','USER'))");
 
             log.info("DatabaseMigrationRunner: users_role_check updated to allow ADMIN, AGENT, USER");
+
+            // Ensure basic roles exist
+            Integer countUser = jdbc.queryForObject("SELECT count(*) FROM roles WHERE name = 'ROLE_USER'", Integer.class);
+            if (countUser == null || countUser == 0) {
+                jdbc.update("INSERT INTO roles(name) VALUES (?)", "ROLE_USER");
+                log.info("DatabaseMigrationRunner: inserted ROLE_USER");
+            }
+            Integer countAgent = jdbc.queryForObject("SELECT count(*) FROM roles WHERE name = 'ROLE_AGENT'", Integer.class);
+            if (countAgent == null || countAgent == 0) {
+                jdbc.update("INSERT INTO roles(name) VALUES (?)", "ROLE_AGENT");
+                log.info("DatabaseMigrationRunner: inserted ROLE_AGENT");
+            }
+            Integer countAdmin = jdbc.queryForObject("SELECT count(*) FROM roles WHERE name = 'ROLE_ADMIN'", Integer.class);
+            if (countAdmin == null || countAdmin == 0) {
+                jdbc.update("INSERT INTO roles(name) VALUES (?)", "ROLE_ADMIN");
+                log.info("DatabaseMigrationRunner: inserted ROLE_ADMIN");
+            }
         } catch (Exception ex) {
             log.error("DatabaseMigrationRunner: migration failed or not applicable - {}", ex.getMessage());
             log.debug("DatabaseMigrationRunner: full exception", ex);

@@ -2,7 +2,6 @@ package com.homelink.api.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,20 +16,22 @@ public class RentalPost {
     @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private Double price;
-
-    private String location;
+    private String address;
+    private String electricityCost;
+    private String waterCost;
 
     @ManyToOne
     @JoinColumn(name = "agent_id", nullable = false)
     private User agent;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    private boolean active = true;
-
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "rentalPost", cascade = CascadeType.ALL)
     private List<Review> reviews;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
+    private boolean active = true;
 }

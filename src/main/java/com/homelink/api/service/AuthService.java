@@ -61,7 +61,7 @@ public class AuthService {
         // 4. Return Detailed Response
         return mapToAuthResponse(user, token);
     }
-
+    
     /**
      * Helper method to convert User entity and Token into AuthResponse DTO
      */

@@ -1,5 +1,6 @@
 package com.homelink.api.controller;
 
+import com.homelink.api.dto.BecomeAgentResponse;
 import com.homelink.api.dto.request.CreateUserRequest;
 import com.homelink.api.dto.request.UpdateUserRequest;
 import com.homelink.api.dto.response.UserResponse;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +19,13 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    // Self-promotion: logged-in user becomes AGENT
+    @PostMapping("/become-agent")
+    public ResponseEntity<BecomeAgentResponse> becomeAgent(Authentication authentication) {
+        String username = authentication.getName(); 
+        return ResponseEntity.ok(userService.becomeAgent(username));
+    }
 
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {
@@ -49,8 +58,5 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         userService.delete(id);
-
-        
     }
-    
 }

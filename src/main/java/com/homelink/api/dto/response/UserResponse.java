@@ -1,13 +1,14 @@
 package com.homelink.api.dto.response;
 
 import com.homelink.api.entity.User;
+
 import lombok.Builder;
+
 import lombok.Getter;
 
 @Getter
 @Builder
 public class UserResponse {
-
     private Long id;
     private String fullName;
     private String username;
@@ -24,11 +25,3 @@ public class UserResponse {
                 .build();
     }
 }
-
-
-
-
-
-
-
-

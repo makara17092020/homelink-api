@@ -1,13 +1,29 @@
 package com.homelink.api.entity;
 
-/**
- * Role constants kept for backward compatibility. Use string-based roles stored
- * on the `User.roles` collection (e.g. "USER", "AGENT", "ADMIN").
- */
-public final class Role {
-    public static final String ADMIN = "ADMIN";
-    public static final String AGENT = "AGENT";
-    public static final String USER = "USER";
+import jakarta.persistence.*;
+import lombok.*;
 
-    private Role() {}
+@Entity
+@Table(name = "roles")
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Role {
+    public static final String ADMIN = "ROLE_ADMIN";
+    public static final String AGENT = "ROLE_AGENT";
+    public static final String USER = "ROLE_USER";
+    
+    // For legacy support if your code uses Role.ROLE_AGENT
+    public static final String ROLE_AGENT = "ROLE_AGENT";
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true)
+    private String name;
+
+    public Role(String name) {
+        this.name = name;
+    }
 }

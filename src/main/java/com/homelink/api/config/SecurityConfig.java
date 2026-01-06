@@ -42,19 +42,27 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
+            .cors(cors -> {}) // Note: Ensure you have a CorsConfigurationSource bean if using a Frontend
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // 1. PUBLIC ENDPOINTS (No Token Required)
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/properties/**", "/api/rental-posts/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/post/**").permitAll() // Allow seeing reviews for a post
                 
-                // Protected endpoints
+                // 2. ADMIN ONLY
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                
+                // 3. AGENT ONLY (Creating/Managing Posts)
+                .requestMatchers(HttpMethod.POST, "/api/properties/**").hasAuthority("AGENT")
+                .requestMatchers("/api/agent/**").hasAuthority("AGENT")
+                
+                // 4. USER/AUTHENTICATED (Posting Reviews/Profile)
+                .requestMatchers(HttpMethod.POST, "/api/reviews/**").authenticated()
                 .requestMatchers("/api/users/become-agent").authenticated()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/agent/**").hasRole("AGENT")
                 .requestMatchers("/api/users/**").authenticated()
                 
+                // 5. EVERYTHING ELSE
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter(userDetailsService), UsernamePasswordAuthenticationFilter.class)

@@ -19,4 +19,5 @@ public class RentalPostResponse {
     private String agentName; // From User entity
     private List<String> imageUrls;
     private LocalDateTime createdAt;
+    private Double averageRating;
 }

@@ -1,3 +1,4 @@
+// Full corrected RestExceptionHandler
 package com.homelink.api.exception;
 
 import org.springframework.http.HttpStatus;

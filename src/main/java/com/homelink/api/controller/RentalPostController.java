@@ -19,12 +19,13 @@ public class RentalPostController {
     private final RentalPostService rentalPostService;
 
     @PostMapping
-    @PreAuthorize("hasRole('AGENT') or hasRole('ADMIN')")
+    // We use hasAuthority because your DB stores "AGENT", not "ROLE_AGENT"
+    @PreAuthorize("hasAuthority('AGENT') or hasAuthority('ADMIN')")
     public ResponseEntity<RentalPostResponse> create(
             @Valid @RequestBody CreateRentalPostRequest request,
             Authentication authentication
     ) {
-        // authentication.getName() returns the username from the JWT
+        // authentication.getName() retrieves the username from the JWT token
         RentalPostResponse response = rentalPostService.createPost(request, authentication.getName());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

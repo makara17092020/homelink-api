@@ -37,14 +37,13 @@ public class User implements UserDetails {
     private String email;
 
     /**
-     * This is your main role column in the 'users' table.
-     * Most of your data is likely here.
+     * Main role column in 'users' table.
      */
     @Column(name = "role", nullable = false)
     private String role;
 
     /**
-     * This maps to the separate 'user_roles' table.
+     * Collection table 'user_roles' for multiple roles.
      */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
@@ -53,22 +52,18 @@ public class User implements UserDetails {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    /**
-     * THE FIX: This method now checks both the List and the single Column.
-     * This prevents the "Access Denied" error if one of them is empty.
-     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-        // 1. Add roles from the collection table (user_roles)
+        // 1. Load from the 'user_roles' table
         if (roles != null && !roles.isEmpty()) {
             authorities.addAll(roles.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList()));
         }
 
-        // 2. Add the role from the main users table if not already present
+        // 2. Load from the 'users.role' column (fallback)
         if (this.role != null && !this.role.isEmpty()) {
             boolean alreadyExists = authorities.stream()
                     .anyMatch(a -> a.getAuthority().equals(this.role));
@@ -81,25 +76,16 @@ public class User implements UserDetails {
     }
 
     public void addRole(String roleName) {
-        if (this.roles == null) {
-            this.roles = new ArrayList<>();
-        }
+        if (this.roles == null) this.roles = new ArrayList<>();
         if (!this.roles.contains(roleName)) {
             this.roles.add(roleName);
         }
-        // Keep the legacy column updated
-        this.role = roleName;
+        this.role = roleName; // Keep main column in sync
     }
 
-    @Override
-    public boolean isAccountNonExpired() { return true; }
-    
-    @Override
-    public boolean isAccountNonLocked() { return true; }
-    
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
-    
-    @Override
-    public boolean isEnabled() { return true; }
+    // Standard UserDetails methods
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }

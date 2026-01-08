@@ -112,5 +112,21 @@
         "url": { "raw": "{{base_url}}/api/users/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", ":id" ] }
       }
     }
+    ,
+    {
+      "name": "Properties / Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\",\n  \"price\": 150.0,\n  \"imageUrls\": [\"http://example.com/a.jpg\", \"http://example.com/b.jpg\"]\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/properties/:id", "host": [ "{{base_url}}" ], "path": [ "api", "properties", ":id" ] }
+      }
+    }
   ]
 }

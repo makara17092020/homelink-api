@@ -18,20 +18,31 @@ import org.hibernate.annotations.CreationTimestamp;
 public class RentalPost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Matches User ID type
+    private Long id;
 
+    @Column(nullable = false)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
     private String address;
+
+    @Column(precision = 10, scale = 2)
     private BigDecimal price;
+
     private String electricityCost; 
     private String waterCost;
+
+    // FIX for the "active" constraint error
+    @Column(nullable = false)
+    @Builder.Default 
+    private Boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agent_id")
     private User agent;
 
-    // FIX: Changed mappedBy to "rentalPost" to match the field name in PropertyImage.java
     @OneToMany(mappedBy = "rentalPost", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PropertyImage> images = new ArrayList<>();

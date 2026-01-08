@@ -14,10 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * User entity implementing Spring Security's UserDetails.
- * Supports multiple roles via List<String> and keeps legacy 'role' column for backward compatibility.
- */
 @Entity
 @Table(name = "users")
 @Data
@@ -40,10 +36,16 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    // Legacy single-column role kept for compatibility with existing DB schema
+    /**
+     * This is your main role column in the 'users' table.
+     * Most of your data is likely here.
+     */
     @Column(name = "role", nullable = false)
     private String role;
 
+    /**
+     * This maps to the separate 'user_roles' table.
+     */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
@@ -52,9 +54,32 @@ public class User implements UserDetails {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     /**
-     * ADDED METHOD: Fixes the "addRole is undefined" error.
-     * This adds a role to the collection and ensures the legacy column is updated.
+     * THE FIX: This method now checks both the List and the single Column.
+     * This prevents the "Access Denied" error if one of them is empty.
      */
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+        // 1. Add roles from the collection table (user_roles)
+        if (roles != null && !roles.isEmpty()) {
+            authorities.addAll(roles.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList()));
+        }
+
+        // 2. Add the role from the main users table if not already present
+        if (this.role != null && !this.role.isEmpty()) {
+            boolean alreadyExists = authorities.stream()
+                    .anyMatch(a -> a.getAuthority().equals(this.role));
+            if (!alreadyExists) {
+                authorities.add(new SimpleGrantedAuthority(this.role));
+            }
+        }
+
+        return authorities;
+    }
+
     public void addRole(String roleName) {
         if (this.roles == null) {
             this.roles = new ArrayList<>();
@@ -62,40 +87,19 @@ public class User implements UserDetails {
         if (!this.roles.contains(roleName)) {
             this.roles.add(roleName);
         }
-        // Update legacy column if it's currently empty
-        if (this.role == null || this.role.isEmpty()) {
-            this.role = roleName;
-        }
-    }
-
-    /**
-     * Convert List<String> roles into GrantedAuthority objects for Spring Security.
-     */
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Keep legacy `role` column in sync with `roles` collection.
-     */
-    public void setRoles(List<String> roles) {
-        this.roles = roles != null ? roles : new ArrayList<>();
-        if (this.roles.isEmpty()) {
-            this.role = "ROLE_USER"; // Default to avoid null constraint errors
-        } else {
-            this.role = this.roles.get(0);
-        }
+        // Keep the legacy column updated
+        this.role = roleName;
     }
 
     @Override
     public boolean isAccountNonExpired() { return true; }
+    
     @Override
     public boolean isAccountNonLocked() { return true; }
+    
     @Override
     public boolean isCredentialsNonExpired() { return true; }
+    
     @Override
     public boolean isEnabled() { return true; }
 }

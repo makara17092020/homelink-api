@@ -9,12 +9,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
-    public static final String ADMIN = "ROLE_ADMIN";
-    public static final String AGENT = "ROLE_AGENT";
-    public static final String USER = "ROLE_USER";
+    public static final String ADMIN = "ADMIN";
+    public static final String AGENT = "AGENT";
+    public static final String USER = "USER";
     
     // For legacy support if your code uses Role.ROLE_AGENT
-    public static final String ROLE_AGENT = "ROLE_AGENT";
+    // public static final String ROLE_AGENT = "ROLE_AGENT";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

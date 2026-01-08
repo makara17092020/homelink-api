@@ -27,13 +27,16 @@ public class AuthService {
         }
         
         User user = new User();
-        user.setFullName(request.getFullName()); // Map the name here
+        user.setFullName(request.getFullName());
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         
-        // Assign default role USER to all new registrations
-        user.setRoles(java.util.List.of("USER"));
+        // FIX START: Set BOTH the List and the single string field
+        String defaultRole = "USER";
+        user.setRole(defaultRole); // This prevents the "NULL not allowed for column ROLE" error
+        user.setRoles(java.util.List.of(defaultRole)); 
+        // FIX END
         
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);

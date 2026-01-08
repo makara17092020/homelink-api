@@ -3,10 +3,15 @@ package com.homelink.api.service;
 import com.homelink.api.dto.AuthResponse;
 import com.homelink.api.dto.RegisterRequest;
 import com.homelink.api.entity.User;
+import com.homelink.api.exception.BadRequestException;
+import com.homelink.api.exception.ResourceNotFoundException;
+import com.homelink.api.exception.UserAlreadyExistsException;
 import com.homelink.api.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class AuthService {
@@ -22,8 +27,14 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        // 1. Check if username exists -> Throw 409 Conflict
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("Username is already taken");
+            throw new UserAlreadyExistsException("Username '" + request.getUsername() + "' is already taken");
+        }
+
+        // 2. Check if email exists -> Throw 409 Conflict
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Email '" + request.getEmail() + "' is already registered");
         }
         
         User user = new User();
@@ -32,11 +43,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         
-        // FIX START: Set BOTH the List and the single string field
+        // Use clean role names without "ROLE_" prefix to match your security logic
         String defaultRole = "USER";
-        user.setRole(defaultRole); // This prevents the "NULL not allowed for column ROLE" error
-        user.setRoles(java.util.List.of(defaultRole)); 
-        // FIX END
+        user.setRole(defaultRole); 
+        user.setRoles(List.of(defaultRole)); 
         
         User savedUser = userRepository.save(user);
         String token = jwtService.generateToken(savedUser);
@@ -45,13 +55,13 @@ public class AuthService {
     }
 
     public AuthResponse login(String username, String password) {
-        // 1. Find user
+        // 1. Find user -> Throw 404 Not Found if missing
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
 
-        // 2. Verify password
+        // 2. Verify password -> Throw 400 Bad Request if incorrect
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
+            throw new BadRequestException("Invalid username or password");
         }
 
         // 3. Generate Token
@@ -68,7 +78,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(token)
                 .id(user.getId())
-                .fullName(user.getFullName()) // Include in response
+                .fullName(user.getFullName())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .roles(user.getRoles().toArray(new String[0]))

@@ -14,6 +14,7 @@ import java.util.Map;
 @ControllerAdvice
 public class RestExceptionHandler {
 
+    // 400 - Validation Errors (e.g., @Valid fails)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -23,21 +24,31 @@ public class RestExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    // 409 - Conflict (User already exists)
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<?> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    // 404 - Not Found
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<?> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", ex.getMessage()));
     }
 
+    // 400 - Bad Request (Login failure)
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<?> handleBadRequest(BadRequestException ex) {
         return ResponseEntity.badRequest()
                 .body(Map.of("error", ex.getMessage()));
     }
 
+    // 500 - Fallback for everything else
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+                .body(Map.of("error", "An unexpected error occurred"));
     }
 }

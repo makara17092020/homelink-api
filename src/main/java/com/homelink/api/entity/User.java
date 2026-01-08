@@ -23,7 +23,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Keeping as Long to match existing DB records
 
     private String fullName;
 
@@ -36,15 +36,9 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    /**
-     * Main role column in 'users' table.
-     */
     @Column(name = "role", nullable = false)
     private String role;
 
-    /**
-     * Collection table 'user_roles' for multiple roles.
-     */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
@@ -55,15 +49,11 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-
-        // 1. Load from the 'user_roles' table
         if (roles != null && !roles.isEmpty()) {
             authorities.addAll(roles.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList()));
         }
-
-        // 2. Load from the 'users.role' column (fallback)
         if (this.role != null && !this.role.isEmpty()) {
             boolean alreadyExists = authorities.stream()
                     .anyMatch(a -> a.getAuthority().equals(this.role));
@@ -71,7 +61,6 @@ public class User implements UserDetails {
                 authorities.add(new SimpleGrantedAuthority(this.role));
             }
         }
-
         return authorities;
     }
 
@@ -80,10 +69,9 @@ public class User implements UserDetails {
         if (!this.roles.contains(roleName)) {
             this.roles.add(roleName);
         }
-        this.role = roleName; // Keep main column in sync
+        this.role = roleName;
     }
 
-    // Standard UserDetails methods
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }

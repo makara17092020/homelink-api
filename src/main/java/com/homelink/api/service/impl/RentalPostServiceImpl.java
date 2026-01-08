@@ -50,7 +50,7 @@ public class RentalPostServiceImpl implements RentalPostService {
                 PropertyImage img = PropertyImage.builder()
                         .url(request.getImageUrls().get(i))
                         .sortOrder(i)
-                        .property(post) // Ensure FK is set
+                        .rentalPost(post) // Ensure FK is set
                         .build();
                 post.getImages().add(img);
             }

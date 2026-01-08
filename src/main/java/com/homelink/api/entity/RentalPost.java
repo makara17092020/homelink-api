@@ -6,10 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
+@Table(name = "rental_posts")
 @Getter 
 @Setter 
 @Builder
@@ -18,14 +18,12 @@ import org.hibernate.annotations.CreationTimestamp;
 public class RentalPost {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Matches User ID type
 
     private String title;
     private String description;
     private String address;
     private BigDecimal price;
-
-    // Fix: Ensure these match the DTO names for the Service to find them
     private String electricityCost; 
     private String waterCost;
 
@@ -33,16 +31,12 @@ public class RentalPost {
     @JoinColumn(name = "agent_id")
     private User agent;
 
-    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    // FIX: Changed mappedBy to "rentalPost" to match the field name in PropertyImage.java
+    @OneToMany(mappedBy = "rentalPost", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PropertyImage> images = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = java.time.LocalDateTime.now();
-    }
 }

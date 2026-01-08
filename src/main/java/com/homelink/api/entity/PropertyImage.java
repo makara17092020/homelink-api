@@ -24,6 +24,6 @@ public class PropertyImage {
     private Integer sortOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "property_id", nullable = false)
-    private RentalPost property;
+    @JoinColumn(name = "rental_post_id", nullable = false) // Changed name to be more descriptive
+    private RentalPost rentalPost; // CHANGED from 'property' to 'rentalPost'
 }

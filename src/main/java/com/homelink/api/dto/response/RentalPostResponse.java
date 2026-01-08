@@ -16,8 +16,9 @@ public class RentalPostResponse {
     private BigDecimal price;
     private String electricityCost;
     private String waterCost;
-    private String agentName; // From User entity
+    private String agentName;
     private List<String> imageUrls;
     private LocalDateTime createdAt;
     private Double averageRating;
+    private Boolean active; // Added this field
 }

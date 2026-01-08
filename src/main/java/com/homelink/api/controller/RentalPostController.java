@@ -18,6 +18,11 @@ public class RentalPostController {
 
     private final RentalPostService rentalPostService;
 
+    @GetMapping
+    public ResponseEntity<java.util.List<RentalPostResponse>> getAll() {
+        return ResponseEntity.ok(rentalPostService.getAllPosts());
+    }
+    
     @PostMapping
     // We use hasAuthority because your DB stores "AGENT", not "ROLE_AGENT"
     @PreAuthorize("hasAuthority('AGENT') or hasAuthority('ADMIN')")

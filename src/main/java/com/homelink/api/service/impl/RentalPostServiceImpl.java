@@ -32,7 +32,7 @@ public class RentalPostServiceImpl implements RentalPostService {
         User agent = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // 2. Build Entity (Manual list init to be safe)
+        // 2. Build Entity (Explicitly setting active to true)
         RentalPost post = RentalPost.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -41,7 +41,8 @@ public class RentalPostServiceImpl implements RentalPostService {
                 .electricityCost(request.getElectricityCost())
                 .waterCost(request.getWaterCost())
                 .agent(agent)
-                .images(new ArrayList<>()) // Prevent NullPointer
+                .active(true) // Ensure the 'active' column is not null
+                .images(new ArrayList<>())
                 .build();
 
         // 3. Map Images
@@ -50,7 +51,7 @@ public class RentalPostServiceImpl implements RentalPostService {
                 PropertyImage img = PropertyImage.builder()
                         .url(request.getImageUrls().get(i))
                         .sortOrder(i)
-                        .rentalPost(post) // Ensure FK is set
+                        .rentalPost(post)
                         .build();
                 post.getImages().add(img);
             }
@@ -59,7 +60,7 @@ public class RentalPostServiceImpl implements RentalPostService {
         // 4. Save
         RentalPost savedPost = rentalPostRepository.save(post);
 
-        // 5. Build Response (with null-safe agent name)
+        // 5. Build Response
         return RentalPostResponse.builder()
                 .id(savedPost.getId())
                 .title(savedPost.getTitle())
@@ -68,6 +69,7 @@ public class RentalPostServiceImpl implements RentalPostService {
                 .price(savedPost.getPrice())
                 .electricityCost(savedPost.getElectricityCost())
                 .waterCost(savedPost.getWaterCost())
+                .active(savedPost.getActive() != null ? savedPost.getActive() : true)
                 .agentName(agent.getFullName() != null ? agent.getFullName() : agent.getUsername())
                 .imageUrls(savedPost.getImages().stream().map(PropertyImage::getUrl).toList())
                 .createdAt(savedPost.getCreatedAt())
@@ -79,6 +81,7 @@ public class RentalPostServiceImpl implements RentalPostService {
         List<RentalPost> posts = rentalPostRepository.findAll();
         return posts.stream().map(post -> {
             Double averageRating = reviewRepository.getAverageRatingByRentalPostId(post.getId());
+            
             return RentalPostResponse.builder()
                     .id(post.getId())
                     .title(post.getTitle())
@@ -87,6 +90,7 @@ public class RentalPostServiceImpl implements RentalPostService {
                     .price(post.getPrice())
                     .electricityCost(post.getElectricityCost())
                     .waterCost(post.getWaterCost())
+                    .active(post.getActive() != null ? post.getActive() : true) // Safe mapping
                     .agentName(post.getAgent().getFullName() != null ? post.getAgent().getFullName() : post.getAgent().getUsername())
                     .imageUrls(post.getImages().stream().map(PropertyImage::getUrl).toList())
                     .createdAt(post.getCreatedAt())

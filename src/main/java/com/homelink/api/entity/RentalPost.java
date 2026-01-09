@@ -31,8 +31,8 @@ public class RentalPost {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    private String electricityCost; 
-    private String waterCost;
+    private Double electricityCost; 
+    private Double waterCost;
 
     // FIX for the "active" constraint error
     @Column(nullable = false)

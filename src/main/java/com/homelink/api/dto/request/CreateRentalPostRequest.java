@@ -7,6 +7,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Data
 public class CreateRentalPostRequest {
     @NotBlank(message = "Title is required")
@@ -22,8 +24,11 @@ public class CreateRentalPostRequest {
     @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal price;
 
-    private String electricityCost;
-    private String waterCost;
+    @JsonProperty("electricity_cost") 
+    private Double electricityCost;
+
+    @JsonProperty("water_cost")
+    private Double waterCost;
 
     private List<String> imageUrls;
 }

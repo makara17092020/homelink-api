@@ -14,11 +14,13 @@ public class RentalPostResponse {
     private String description;
     private String address;
     private BigDecimal price;
-    private String electricityCost;
-    private String waterCost;
+    private Double electricityCost;
+    private Double waterCost;
     private String agentName;
     private List<String> imageUrls;
     private LocalDateTime createdAt;
     private Double averageRating;
-    private Boolean active; // Added this field
+    private Boolean active; 
+    private Integer totalRatings; 
+    private List<ReviewResponse> reviews; 
 }

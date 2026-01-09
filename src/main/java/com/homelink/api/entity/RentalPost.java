@@ -31,10 +31,10 @@ public class RentalPost {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "electricity_cost") // Added explicit column mapping
-    private Double electricityCost; 
-    
-    @Column(name = "water_cost") // Added explicit column mapping
+    @Column(name = "electricity_cost", columnDefinition = "double precision")
+    private Double electricityCost;
+
+    @Column(name = "water_cost", columnDefinition = "double precision")
     private Double waterCost;
 
     @Column(nullable = false)

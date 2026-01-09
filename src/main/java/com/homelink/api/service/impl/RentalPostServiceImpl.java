@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +34,12 @@ public class RentalPostServiceImpl implements RentalPostService {
         User agent = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // 2. Build Entity (Mapping from Request)
+        // 2. Build Parent Entity (RentalPost)
         RentalPost post = RentalPost.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .address(request.getAddress())
                 .price(request.getPrice())
-                // Ensure these are mapped correctly from the Request DTO
                 .electricityCost(request.getElectricityCost()) 
                 .waterCost(request.getWaterCost())
                 .agent(agent)
@@ -47,39 +47,23 @@ public class RentalPostServiceImpl implements RentalPostService {
                 .images(new ArrayList<>())
                 .build();
 
-        // 3. Map Images if present
+        // 3. Map Child Entities (PropertyImages) and link to Parent
         if (request.getImageUrls() != null) {
             for (int i = 0; i < request.getImageUrls().size(); i++) {
                 PropertyImage img = PropertyImage.builder()
                         .url(request.getImageUrls().get(i))
                         .sortOrder(i)
-                        .rentalPost(post)
                         .build();
-                post.getImages().add(img);
+                // Use the helper method we just added to the Entity
+                post.addImage(img); 
             }
         }
 
-        // 4. Save to Database
+        // 4. Save to Database (Ensure CascadeType.ALL is on the images list in RentalPost entity)
         RentalPost savedPost = rentalPostRepository.save(post);
 
-        // 5. Build Response (Mapping from the saved Entity)
-        return RentalPostResponse.builder()
-                .id(savedPost.getId())
-                .title(savedPost.getTitle())
-                .description(savedPost.getDescription())
-                .address(savedPost.getAddress())
-                .price(savedPost.getPrice())
-                // Check if saved value is null, fallback to request if necessary
-                .electricityCost(savedPost.getElectricityCost() != null ? savedPost.getElectricityCost() : request.getElectricityCost())
-                .waterCost(savedPost.getWaterCost() != null ? savedPost.getWaterCost() : request.getWaterCost())
-                .active(savedPost.getActive() != null ? savedPost.getActive() : true)
-                .agentName(agent.getFullName() != null ? agent.getFullName() : agent.getUsername())
-                .imageUrls(savedPost.getImages().stream().map(PropertyImage::getUrl).toList())
-                .createdAt(savedPost.getCreatedAt())
-                .averageRating(0.0)
-                .totalRatings(0)
-                .reviews(new ArrayList<>())
-                .build();
+        // 5. Build Response
+        return mapToResponse(savedPost, 0.0, 0, new ArrayList<>());
     }
 
     @Override
@@ -88,10 +72,9 @@ public class RentalPostServiceImpl implements RentalPostService {
         List<RentalPost> posts = rentalPostRepository.findAll();
         
         return posts.stream().map(post -> {
-            // Fetch Statistics
+            // Fetch Review Statistics
             Double averageRating = reviewRepository.getAverageRatingByRentalPostId(post.getId());
             
-            // Map Reviews to ReviewResponse DTOs
             List<ReviewResponse> reviewDTOs = reviewRepository.findByRentalPostId(post.getId())
                 .stream()
                 .map(review -> ReviewResponse.builder()
@@ -105,24 +88,29 @@ public class RentalPostServiceImpl implements RentalPostService {
                     .build())
                 .toList();
 
-            // Build Response for each post
-            return RentalPostResponse.builder()
-                    .id(post.getId())
-                    .title(post.getTitle())
-                    .description(post.getDescription())
-                    .address(post.getAddress())
-                    .price(post.getPrice())
-                    .electricityCost(post.getElectricityCost())
-                    .waterCost(post.getWaterCost())
-                    .active(post.getActive() != null ? post.getActive() : true)
-                    .agentName(post.getAgent().getFullName() != null ? 
-                               post.getAgent().getFullName() : post.getAgent().getUsername())
-                    .imageUrls(post.getImages().stream().map(PropertyImage::getUrl).toList())
-                    .createdAt(post.getCreatedAt())
-                    .averageRating(averageRating != null ? Math.round(averageRating * 10.0) / 10.0 : 0.0)
-                    .totalRatings(reviewDTOs.size()) 
-                    .reviews(reviewDTOs)
-                    .build();
+            double roundedAvg = (averageRating != null) ? Math.round(averageRating * 10.0) / 10.0 : 0.0;
+            
+            return mapToResponse(post, roundedAvg, reviewDTOs.size(), reviewDTOs);
         }).toList();
+    }
+
+    // Helper method to keep code clean
+    private RentalPostResponse mapToResponse(RentalPost post, Double avg, Integer total, List<ReviewResponse> reviews) {
+        return RentalPostResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .description(post.getDescription())
+                .address(post.getAddress())
+                .price(post.getPrice())
+                .electricityCost(post.getElectricityCost())
+                .waterCost(post.getWaterCost())
+                .active(post.getActive() != null ? post.getActive() : true)
+                .agentName(post.getAgent().getFullName() != null ? post.getAgent().getFullName() : post.getAgent().getUsername())
+                .imageUrls(post.getImages().stream().map(PropertyImage::getUrl).collect(Collectors.toList()))
+                .createdAt(post.getCreatedAt())
+                .averageRating(avg)
+                .totalRatings(total)
+                .reviews(reviews)
+                .build();
     }
 }

@@ -5,25 +5,23 @@ import lombok.*;
 
 @Entity
 @Table(name = "property_images")
-@Getter 
+@Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class PropertyImage {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String url;
-
-    private String altText;
-
+    
+    @Column(name = "sort_order")
     private Integer sortOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rental_post_id", nullable = false) // Changed name to be more descriptive
-    private RentalPost rentalPost; // CHANGED from 'property' to 'rentalPost'
+    // FIX: Naming this 'property_id' to match your Database Error
+    @JoinColumn(name = "property_id", nullable = false) 
+    private RentalPost rentalPost;
 }

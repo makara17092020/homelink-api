@@ -31,10 +31,12 @@ public class RentalPost {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "electricity_cost") // Added explicit column mapping
     private Double electricityCost; 
+    
+    @Column(name = "water_cost") // Added explicit column mapping
     private Double waterCost;
 
-    // FIX for the "active" constraint error
     @Column(nullable = false)
     @Builder.Default 
     private Boolean active = true;
@@ -50,4 +52,10 @@ public class RentalPost {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    // HELPER METHOD: This ensures both sides of the relationship are linked correctly
+    public void addImage(PropertyImage image) {
+        images.add(image);
+        image.setRentalPost(this); // This is what prevents the 'null property_id' error
+    }
 }

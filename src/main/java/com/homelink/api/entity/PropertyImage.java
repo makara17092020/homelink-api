@@ -21,7 +21,8 @@ public class PropertyImage {
     private Integer sortOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    // FIX: Naming this 'property_id' to match your Database Error
-    @JoinColumn(name = "property_id", nullable = false) 
+    // FIX: Change this from property_id back to rental_post_id 
+    // because the Error log says "rental_post_id" violates not-null constraint.
+    @JoinColumn(name = "rental_post_id", nullable = false) 
     private RentalPost rentalPost;
 }

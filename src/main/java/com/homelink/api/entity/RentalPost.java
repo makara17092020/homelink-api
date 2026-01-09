@@ -45,6 +45,7 @@ public class RentalPost {
     @JoinColumn(name = "agent_id")
     private User agent;
 
+    // Inside RentalPost.java
     @OneToMany(mappedBy = "rentalPost", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PropertyImage> images = new ArrayList<>();
@@ -56,6 +57,6 @@ public class RentalPost {
     // HELPER METHOD: This ensures both sides of the relationship are linked correctly
     public void addImage(PropertyImage image) {
         images.add(image);
-        image.setRentalPost(this); // This is what prevents the 'null property_id' error
+        image.setRentalPost(this); // This links the ID
     }
 }
